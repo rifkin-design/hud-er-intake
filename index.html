@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HUD ER Intake Form | AZ-RI Consultants</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<style>
+  :root{
+    --olive:#6b7540; --olive-dark:#4a5230; --olive-light:#eef0e4;
+    --rule:#c9cdb6; --grey:#5a5c50; --ink:#1f2115; --amber:#9a5b2b;
+  }
+  *{box-sizing:border-box;}
+  body{font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;color:var(--ink);background:#fff;margin:0;padding:24px 16px;line-height:1.45;}
+  .wrap{max-width:820px;margin:0 auto;}
+
+  .azri-header{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:3px solid var(--olive);padding-bottom:10px;gap:20px;}
+  .azri-header img{height:62px;width:auto;}
+  .azri-contact{text-align:right;font-size:12px;color:var(--grey);line-height:1.6;}
+  .azri-contact .lead{color:var(--olive-dark);font-weight:700;font-size:12px;}
+
+  .banner{background:linear-gradient(135deg,var(--olive) 0%,var(--olive-dark) 100%);border-radius:10px;text-align:center;padding:26px 20px;margin:18px 0 22px;color:#fff;}
+  .banner h1{font-size:26px;margin:0;font-weight:800;letter-spacing:.3px;}
+  .banner .sub{font-size:14px;margin-top:7px;color:#eef0e4;}
+
+  .about-card{border:1px solid var(--rule);border-radius:8px;padding:18px 22px;margin:0 0 18px;background:#fff;}
+  .about-h{font-size:17px;color:var(--olive-dark);margin:0 0 10px;font-weight:700;}
+  .about-card p{font-size:14px;line-height:1.55;margin:0 0 11px;}
+  .about-card p:last-child{margin-bottom:0;}
+  .callout{background:var(--olive-light);border-left:4px solid var(--olive);border-radius:0 6px 6px 0;padding:13px 16px;font-size:14px;line-height:1.55;color:var(--ink);margin-top:6px;}
+  .intro{font-size:13px;color:var(--grey);font-style:italic;margin:16px 2px 20px;line-height:1.5;text-align:center;}
+
+  fieldset{border:1px solid var(--rule);border-left:3px solid var(--olive);border-radius:4px;margin:0 0 20px;padding:14px 18px 6px;}
+  legend{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--olive-dark);padding:0 6px;}
+  .grid{display:flex;flex-wrap:wrap;gap:14px 20px;}
+  .fld{flex:1 1 240px;display:flex;flex-direction:column;margin-bottom:12px;}
+  .fld.full{flex:1 1 100%;}
+  .fld.third{flex:1 1 150px;}
+  label.lab{font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--olive-dark);font-weight:700;margin-bottom:4px;}
+  input[type=text],input[type=email],input[type=tel],input[type=number],input[type=date],select,textarea{
+    font:inherit;font-size:14px;padding:8px 10px;border:1px solid #b9bda6;border-radius:4px;background:#fff;width:100%;}
+  input:focus,select:focus,textarea:focus{outline:none;border-color:var(--olive);box-shadow:0 0 0 2px rgba(107,117,64,.18);}
+  textarea{resize:vertical;min-height:70px;}
+  input[type=file]{font-size:13px;}
+
+  .note-box{background:var(--olive-light);border-left:4px solid var(--olive);border-radius:0 6px 6px 0;padding:11px 14px;font-size:13px;line-height:1.5;color:var(--ink);margin-bottom:16px;}
+  .field-desc{font-size:12.5px;color:var(--grey);line-height:1.45;margin:-4px 0 8px;}
+
+  .sub-h{font-size:13px;font-weight:700;color:var(--olive-dark);text-transform:uppercase;letter-spacing:.5px;margin:16px 0 10px;}
+  .radios{display:flex;gap:8px;flex-wrap:wrap;}
+  .radios label,.checks label{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;border:1px solid #b9bda6;border-radius:20px;padding:6px 13px;cursor:pointer;user-select:none;color:var(--grey);}
+  .radios input,.checks input{accent-color:var(--olive);margin:0;}
+  .radios label:hover,.checks label:hover{border-color:var(--olive);}
+  .checks{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+  @media (max-width:560px){.checks{grid-template-columns:1fr;}}
+
+  .fs-item{background:#fafbf5;border:1px solid var(--rule);border-radius:6px;padding:14px 16px;margin-bottom:12px;}
+  .fs-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+  .fs-num{font-weight:700;color:var(--olive-dark);font-size:13px;}
+  .btn{font:inherit;font-size:13px;font-weight:600;border:none;border-radius:5px;padding:8px 15px;cursor:pointer;}
+  .btn-add{background:var(--olive);color:#fff;}
+  .btn-add:hover{background:var(--olive-dark);}
+  .btn-rm{background:#a12b2b;color:#fff;padding:5px 12px;}
+  .total{background:var(--olive-light);border:1px solid var(--olive);border-radius:6px;padding:11px 14px;font-weight:700;color:var(--olive-dark);font-size:15px;margin-top:6px;}
+
+  .conditional{display:none;margin-top:12px;}
+  .conditional.show{display:block;}
+
+  .actions{margin:8px 2px 4px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;}
+  button.submit{background:var(--olive);color:#fff;font:inherit;font-size:16px;font-weight:700;border:none;border-radius:6px;padding:13px 30px;cursor:pointer;letter-spacing:.3px;}
+  button.submit:hover{background:var(--olive-dark);}
+  button.submit:disabled{opacity:.6;cursor:default;}
+  .note{font-size:12px;color:var(--grey);}
+  #status{font-size:14px;font-weight:600;margin-top:8px;}
+  #status.ok{color:var(--olive-dark);}
+  #status.err{color:#a12b2b;}
+  .req{color:var(--amber);}
+  .levels{font-size:13px;line-height:1.6;margin:6px 0 0 2px;color:var(--ink);}
+  .levels b{color:var(--olive-dark);}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="azri-header">
+    <img src="data:image/png;base64,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" alt="AZ-RI Consultants">
+    <div class="azri-contact">
+      <span class="lead">az-ri.com &middot; info@az-ri.com</span><br>
+      919 W. 34th Street, #4706, Baltimore, MD 21211
+    </div>
+  </div>
+
+  <div class="banner">
+    <h1>HUD ER Intake Form</h1>
+    <div class="sub">HUD Part 58 Environmental Review &mdash; New Engagement Intake</div>
+  </div>
+
+  <section class="about-card">
+    <h2 class="about-h">About This Form</h2>
+    <p>This form starts a new HUD Part 58 Environmental Review engagement with AZ-RI Consultants. It collects your
+      contact information, the property location, HUD funding details, and the project scope we need to determine the
+      appropriate level of review.</p>
+    <div class="callout">
+      When you submit, a branded PDF summary downloads to you and is sent to AZ-RI. If your engagement is limited to a
+      Phase I or Limited ESA only (no HUD review), please use the <b>ESA Intake Form</b> instead.
+    </div>
+  </section>
+
+  <p class="intro"><span class="req">*</span> indicates a required field.</p>
+
+  <form id="hudform" novalidate enctype="multipart/form-data">
+
+    <fieldset>
+      <legend>1. Contact Information</legend>
+      <div class="grid">
+        <div class="fld"><label class="lab">Your Name <span class="req">*</span></label><input type="text" name="contactName" required></div>
+        <div class="fld"><label class="lab">Title / Position</label><input type="text" name="contactTitle"></div>
+        <div class="fld full"><label class="lab">Organization Name <span class="req">*</span></label><input type="text" name="organization" required></div>
+        <div class="fld"><label class="lab">Email <span class="req">*</span></label><input type="email" name="email" required></div>
+        <div class="fld"><label class="lab">Phone</label><input type="tel" name="phone"></div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>2. Property Location</legend>
+      <div class="grid">
+        <div class="fld full"><label class="lab">Street Address <span class="req">*</span></label><input type="text" name="street" required placeholder="Complete street address, or nearest intersection if unavailable"></div>
+        <div class="fld"><label class="lab">City <span class="req">*</span></label><input type="text" name="city" required></div>
+        <div class="fld"><label class="lab">County</label><input type="text" name="county"></div>
+        <div class="fld third"><label class="lab">State <span class="req">*</span></label>
+          <select name="state" required>
+            <option value="">Select</option>
+            <option>MD</option><option>VA</option><option>DC</option><option>DE</option><option>PA</option><option>WV</option>
+            <option>AL</option><option>AK</option><option>AZ</option><option>AR</option><option>CA</option><option>CO</option>
+            <option>CT</option><option>FL</option><option>GA</option><option>HI</option><option>ID</option><option>IL</option>
+            <option>IN</option><option>IA</option><option>KS</option><option>KY</option><option>LA</option><option>ME</option>
+            <option>MA</option><option>MI</option><option>MN</option><option>MS</option><option>MO</option><option>MT</option>
+            <option>NE</option><option>NV</option><option>NH</option><option>NJ</option><option>NM</option><option>NY</option>
+            <option>NC</option><option>ND</option><option>OH</option><option>OK</option><option>OR</option><option>RI</option>
+            <option>SC</option><option>SD</option><option>TN</option><option>TX</option><option>UT</option><option>VT</option>
+            <option>WA</option><option>WI</option><option>WY</option>
+          </select>
+        </div>
+        <div class="fld third"><label class="lab">ZIP <span class="req">*</span></label><input type="text" name="zip" required></div>
+        <div class="fld"><label class="lab">Assessor's Parcel Number (APN)</label><input type="text" name="apn"></div>
+        <div class="fld"><label class="lab">Approximate Acreage</label><input type="text" name="acreage"></div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>3. HUD Project Information</legend>
+      <div class="grid">
+        <div class="fld full"><label class="lab">Project Name <span class="req">*</span></label><input type="text" name="projectName" required></div>
+      </div>
+      <p class="field-desc">Official project name as it appears in grant documents or funding applications.</p>
+
+      <div class="sub-h">HUD Funding Source(s)</div>
+      <p class="field-desc">Include only funding sources for which this review will fulfill HUD's environmental review requirements.</p>
+      <div id="hud-sources"></div>
+      <button type="button" class="btn btn-add" id="add-hud">+ Add HUD Funding Source</button>
+      <div class="total" id="hud-total">Estimated Total HUD Funded Amount: $0.00</div>
+
+      <div class="grid" style="margin-top:16px;">
+        <div class="fld full"><label class="lab">Estimated Total Project Cost <span class="req">*</span></label>
+          <input type="number" name="totalProjectCost" min="0" step="0.01" placeholder="0" required></div>
+      </div>
+      <p class="field-desc">All project costs from all funding sources (HUD and non-HUD): construction, soft costs, acquisition, and other expenses.</p>
+
+      <div class="sub-h">Other Federal Funding Sources</div>
+      <div class="radios" id="other-fed-toggle">
+        <label><input type="radio" name="otherFederal" value="no" checked> No other federal funding</label>
+        <label><input type="radio" name="otherFederal" value="yes"> Yes, other federal funding</label>
+      </div>
+      <p class="field-desc">Federal funding from other agencies may trigger additional environmental review requirements.</p>
+      <div class="conditional" id="other-fed-box">
+        <div id="fed-sources"></div>
+        <button type="button" class="btn btn-add" id="add-fed">+ Add Federal Funding Source</button>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>4. Project Summary</legend>
+      <div class="grid">
+        <div class="fld full"><label class="lab">Description of Proposed Project <span class="req">*</span></label>
+          <textarea name="projectDescription" required placeholder="Nature and scope of activities, size and scale, and any activities that may have environmental impacts..."></textarea></div>
+        <div class="fld full"><label class="lab">Upload Project Description / Scope of Work (optional)</label>
+          <input type="file" name="projectDocuments" accept=".pdf,.doc,.docx,.dwg" multiple>
+          <div class="note" style="margin-top:5px;">Architectural plans, scope of work, narratives (PDF, DOC, DWG) &mdash; max 10MB per file.</div></div>
+      </div>
+
+      <div class="sub-h">Project Activities <span class="req">*</span></div>
+      <p class="field-desc">Check all that apply.</p>
+      <div class="checks" id="activities">
+        <label><input type="checkbox" name="activities" value="Acquisition (incl. refinance)"> Acquisition (incl. refinance)</label>
+        <label><input type="checkbox" name="activities" value="Leasing"> Leasing</label>
+        <label><input type="checkbox" name="activities" value="Maintenance"> Maintenance</label>
+        <label><input type="checkbox" name="activities" value="Repair / Improvement / Rehabilitation"> Repair / Improvement / Rehab</label>
+        <label><input type="checkbox" name="activities" value="New Construction / Reconstruction"> New Construction / Reconstruction</label>
+        <label><input type="checkbox" name="activities" value="Demolition"> Demolition</label>
+        <label><input type="checkbox" name="activities" value="Disposition"> Disposition</label>
+        <label><input type="checkbox" name="activities" value="Removal of architectural barriers"> Removal of architectural barriers</label>
+        <label><input type="checkbox" name="activities" value="Soft costs / non-physical activities"> Soft costs / non-physical</label>
+      </div>
+
+      <div class="sub-h">Land Use Change</div>
+      <div class="radios">
+        <label><input type="radio" name="landUseChange" value="No" checked> No</label>
+        <label><input type="radio" name="landUseChange" value="Yes"> Yes</label>
+      </div>
+      <div class="conditional" id="luc-box">
+        <label class="lab" style="margin-top:6px;">Describe the land use change</label>
+        <textarea name="landUseDescription"></textarea>
+      </div>
+
+      <div class="sub-h">Planned Use of Property <span class="req">*</span></div>
+      <p class="field-desc">Check planned use after completion.</p>
+      <div class="checks" id="planned-use">
+        <label><input type="checkbox" name="plannedUse" value="Vacant land"> Vacant land</label>
+        <label><input type="checkbox" name="plannedUse" value="Public facility"> Public facility</label>
+        <label><input type="checkbox" name="plannedUse" value="Nonresidential building(s)"> Nonresidential building(s)</label>
+        <label><input type="checkbox" name="plannedUse" value="Residential – Single family"> Residential – Single family</label>
+        <label><input type="checkbox" name="plannedUse" value="Residential – Multifamily"> Residential – Multifamily</label>
+      </div>
+      <div class="grid" style="margin-top:12px;">
+        <div class="fld"><label class="lab">If residential, number of units</label><input type="number" name="units" min="0"></div>
+      </div>
+
+      <div class="sub-h">Ground Disturbance</div>
+      <div class="radios">
+        <label><input type="radio" name="groundDisturbance" value="No" checked> No</label>
+        <label><input type="radio" name="groundDisturbance" value="Yes"> Yes</label>
+      </div>
+      <p class="field-desc">Ground disturbance triggers Section 106 (National Historic Preservation Act) consultation with SHPOs, THPOs, and Tribes.</p>
+      <div class="conditional" id="gd-box">
+        <label class="lab">Details about the ground disturbance</label>
+        <textarea name="groundDisturbanceDetails"></textarea>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>5. Level of Review</legend>
+      <div class="note-box"><b>AZ-RI will determine the appropriate level of review based on the information you provide.</b>
+        HUD environmental reviews are conducted at these levels:</div>
+      <div class="levels">
+        <b>Exempt</b> — activities with no potential environmental impact<br>
+        <b>CEST</b> — minimal impact requiring basic compliance reviews<br>
+        <b>EA</b> — projects requiring detailed environmental analysis<br>
+        <b>EIS</b> — major projects with significant environmental impacts
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>6. Project Justification (Preliminary)</legend>
+      <p class="field-desc" style="font-weight:600;color:var(--ink);">Does your project involve new construction, or will it increase building size by greater than 20%?</p>
+      <div class="radios" id="ea-toggle">
+        <label><input type="radio" name="eaApplicable" value="No" checked> No</label>
+        <label><input type="radio" name="eaApplicable" value="Yes"> Yes — show EA questions</label>
+      </div>
+      <div class="conditional" id="ea-box">
+        <div class="note-box" style="margin-top:12px;">Additional information for EA-level projects.</div>
+        <div class="grid">
+          <div class="fld full"><label class="lab">Statement of Purpose and Need</label>
+            <textarea name="purposeNeed" placeholder="Community need; target population; how the project addresses local priorities; any urgent circumstances..."></textarea></div>
+          <div class="fld full"><label class="lab">Existing Conditions and Trends</label>
+            <textarea name="existingConditions" placeholder="Physical condition of the property and surrounding area; demographics; market conditions; trends; environmental conditions..."></textarea></div>
+          <div class="fld full"><label class="lab">Upload Applicable Documents (optional)</label>
+            <input type="file" name="purposeDocuments" accept=".pdf,.doc,.docx,.jpg,.png" multiple>
+            <div class="note" style="margin-top:5px;">Needs assessments, market studies, planning reports, letters of support &mdash; max 10MB per file.</div></div>
+        </div>
+      </div>
+    </fieldset>
+
+    <div class="actions">
+      <button type="submit" class="submit" id="submitBtn">Submit &amp; Generate PDF</button>
+      <span class="note">A branded PDF downloads to you instantly and is sent to AZ-RI.</span>
+    </div>
+    <div id="status"></div>
+  </form>
+
+  <div style="text-align:center;font-size:11px;color:#b7bba4;margin-top:18px;">HUD ER Intake Form &middot; v1</div>
+</div>
+
+<script>
+/* ===== AZ-RI HUD ER Intake Form — branded PDF built directly with jsPDF ===== */
+var FORMSPREE_ENDPOINT = "https://formspree.io/f/xgoelkak";
+var FORM_TYPE = "HUD ER Intake";
+var LOGO = "data:image/png;base64,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";
+
+var OLIVE=[107,117,64], OLIVE_DK=[74,82,48], OLIVE_LT=[238,240,228],
+    GREY=[90,92,80], AMBER=[154,91,43], NAGREY=[138,140,122],
+    RULE=[201,205,182], INK=[31,33,21], WHITE=[255,255,255];
+
+var hudCount=0, fedCount=0;
+
+function money(n){ return "$"+(parseFloat(n)||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+
+function addHudSource(){
+  hudCount++;
+  var n=hudCount;
+  var div=document.createElement("div");
+  div.className="fs-item"; div.setAttribute("data-hud",n);
+  div.innerHTML=
+    '<div class="fs-head"><span class="fs-num">HUD Funding Source #'+n+'</span>'+
+      (n>1?'<button type="button" class="btn btn-rm" data-rm-hud="'+n+'">Remove</button>':'')+'</div>'+
+    '<div class="grid">'+
+      '<div class="fld"><label class="lab">Grant # or FHA #</label><input type="text" name="hudGrant'+n+'"></div>'+
+      '<div class="fld"><label class="lab">HUD Program</label><input type="text" name="hudProgram'+n+'" placeholder="FHA, CPD, HOME, SHOP, etc."></div>'+
+      '<div class="fld"><label class="lab">Funding Amount</label><input type="number" class="hud-amt" name="hudAmount'+n+'" min="0" step="0.01" placeholder="0"></div>'+
+    '</div>';
+  document.getElementById("hud-sources").appendChild(div);
+  resizeParentIframe();
+}
+function addFedSource(){
+  fedCount++;
+  var n=fedCount;
+  var div=document.createElement("div");
+  div.className="fs-item"; div.setAttribute("data-fed",n);
+  div.innerHTML=
+    '<div class="fs-head"><span class="fs-num">Other Federal Source #'+n+'</span>'+
+      (n>1?'<button type="button" class="btn btn-rm" data-rm-fed="'+n+'">Remove</button>':'')+'</div>'+
+    '<div class="grid">'+
+      '<div class="fld"><label class="lab">Grant # or Award #</label><input type="text" name="fedGrant'+n+'"></div>'+
+      '<div class="fld"><label class="lab">Federal Agency</label><input type="text" name="fedAgency'+n+'"></div>'+
+      '<div class="fld"><label class="lab">Program Name</label><input type="text" name="fedProgram'+n+'"></div>'+
+      '<div class="fld"><label class="lab">Funding Amount</label><input type="number" name="fedAmount'+n+'" min="0" step="0.01" placeholder="0"></div>'+
+    '</div>';
+  document.getElementById("fed-sources").appendChild(div);
+  resizeParentIframe();
+}
+function calcHudTotal(){
+  var t=0; document.querySelectorAll(".hud-amt").forEach(function(el){ t+=parseFloat(el.value)||0; });
+  document.getElementById("hud-total").textContent="Estimated Total HUD Funded Amount: "+money(t);
+  return t;
+}
+
+/* init */
+addHudSource();
+document.getElementById("add-hud").addEventListener("click", addHudSource);
+document.getElementById("add-fed").addEventListener("click", addFedSource);
+document.addEventListener("input", function(e){ if(e.target.classList.contains("hud-amt")) calcHudTotal(); });
+document.addEventListener("click", function(e){
+  var h=e.target.getAttribute("data-rm-hud");
+  if(h){ var el=document.querySelector('[data-hud="'+h+'"]'); if(el){ el.remove(); calcHudTotal(); resizeParentIframe(); } }
+  var f=e.target.getAttribute("data-rm-fed");
+  if(f){ var el2=document.querySelector('[data-fed="'+f+'"]'); if(el2){ el2.remove(); resizeParentIframe(); } }
+});
+document.getElementsByName("otherFederal").forEach(function(r){
+  r.addEventListener("change", function(){
+    var show=this.value==="yes";
+    document.getElementById("other-fed-box").classList.toggle("show", show);
+    if(show && fedCount===0) addFedSource();
+    if(!show){ document.getElementById("fed-sources").innerHTML=""; fedCount=0; }
+    resizeParentIframe();
+  });
+});
+document.getElementsByName("landUseChange").forEach(function(r){
+  r.addEventListener("change", function(){ document.getElementById("luc-box").classList.toggle("show", this.value==="Yes"); resizeParentIframe(); });
+});
+document.getElementsByName("groundDisturbance").forEach(function(r){
+  r.addEventListener("change", function(){ document.getElementById("gd-box").classList.toggle("show", this.value==="Yes"); resizeParentIframe(); });
+});
+document.getElementsByName("eaApplicable").forEach(function(r){
+  r.addEventListener("change", function(){ document.getElementById("ea-box").classList.toggle("show", this.value==="Yes"); resizeParentIframe(); });
+});
+
+/* helpers */
+function val(name){var el=document.querySelector('[name="'+name+'"]');return el?el.value.trim():"";}
+function radioVal(name){var el=document.querySelector('[name="'+name+'"]:checked');return el?el.value:"";}
+function checkVals(name){return Array.prototype.map.call(document.querySelectorAll('[name="'+name+'"]:checked'),function(el){return el.value;});}
+function fileNames(name){var el=document.querySelector('[name="'+name+'"]');if(!el||!el.files||!el.files.length)return [];return Array.prototype.map.call(el.files,function(f){return f.name;});}
+function todayPretty(){var d=new Date(),m=["January","February","March","April","May","June","July","August","September","October","November","December"];return m[d.getMonth()]+" "+d.getDate()+", "+d.getFullYear();}
+function fileStamp(){var name=(val("contactName")||"Client").replace(/[^A-Za-z0-9]+/g,"_").replace(/^_|_$/g,"");return "AZ-RI_HUD_ER_Intake_"+name+".pdf";}
+
+function gatherHud(){
+  var sources=[], total=0;
+  document.querySelectorAll('[data-hud]').forEach(function(el){
+    var n=el.getAttribute("data-hud");
+    var g=val("hudGrant"+n), p=val("hudProgram"+n), a=val("hudAmount"+n);
+    if(g||p||a){ sources.push({grant:g,program:p,amount:a}); total+=parseFloat(a)||0; }
+  });
+  return {sources:sources,total:total};
+}
+function gatherFed(){
+  var sources=[];
+  document.querySelectorAll('[data-fed]').forEach(function(el){
+    var n=el.getAttribute("data-fed");
+    var g=val("fedGrant"+n), ag=val("fedAgency"+n), p=val("fedProgram"+n), a=val("fedAmount"+n);
+    if(g||ag||p||a) sources.push({grant:g,agency:ag,program:p,amount:a});
+  });
+  return sources;
+}
+
+function gatherData(){
+  var hud=gatherHud();
+  return {
+    contactName:val("contactName"), contactTitle:val("contactTitle"), organization:val("organization"),
+    email:val("email"), phone:val("phone"),
+    street:val("street"), city:val("city"), county:val("county"), state:val("state"), zip:val("zip"),
+    apn:val("apn"), acreage:val("acreage"),
+    projectName:val("projectName"),
+    hudSources:hud.sources, hudTotal:hud.total, totalProjectCost:val("totalProjectCost"),
+    otherFederal:radioVal("otherFederal"), fedSources:gatherFed(),
+    projectDescription:val("projectDescription"), projectFiles:fileNames("projectDocuments"),
+    activities:checkVals("activities"),
+    landUseChange:radioVal("landUseChange"), landUseDescription:val("landUseDescription"),
+    plannedUse:checkVals("plannedUse"), units:val("units"),
+    groundDisturbance:radioVal("groundDisturbance"), groundDisturbanceDetails:val("groundDisturbanceDetails"),
+    eaApplicable:radioVal("eaApplicable"), purposeNeed:val("purposeNeed"),
+    existingConditions:val("existingConditions"), purposeFiles:fileNames("purposeDocuments"),
+    date:todayPretty()
+  };
+}
+
+function sectionHead(doc,ML,contentW,y,text){
+  doc.setFillColor(OLIVE[0],OLIVE[1],OLIVE[2]); doc.rect(ML,y,contentW,15,'F');
+  doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(WHITE[0],WHITE[1],WHITE[2]);
+  doc.text(text, ML+7, y+10.3);
+  return y+15;
+}
+function labelValueTable(doc,ML,MR,contentW,y,rows){
+  var lblS={fontStyle:'bold',fontSize:7.5,textColor:OLIVE_DK,cellPadding:{top:4,bottom:4,left:8,right:6},cellWidth:140,valign:'top'};
+  var valS={fontStyle:'normal',fontSize:9,textColor:INK,cellPadding:{top:4,bottom:4,left:2,right:8},valign:'top'};
+  var body=rows.map(function(r){ return [{content:r[0],styles:lblS},{content:r[1]||'—',styles:valS}]; });
+  doc.autoTable({
+    startY:y, margin:{left:ML,right:MR}, theme:'grid',
+    styles:{lineColor:RULE,lineWidth:0.5,overflow:'linebreak'},
+    columnStyles:{0:{cellWidth:140},1:{cellWidth:contentW-140}},
+    alternateRowStyles:{fillColor:[247,248,241]},
+    body:body
+  });
+  return doc.lastAutoTable.finalY;
+}
+
+function buildPdf(data){
+  var jsPDF=window.jspdf.jsPDF;
+  var doc=new jsPDF({unit:'pt',format:'letter'});
+  var PW=612, PH=792, ML=42, MR=42, contentW=PW-ML-MR;
+  var logoW=140, logoH=logoW*415/1252;
+  doc.addImage(LOGO,'PNG',ML,32,logoW,logoH);
+  doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(OLIVE_DK[0],OLIVE_DK[1],OLIVE_DK[2]);
+  doc.text('az-ri.com  ·  info@az-ri.com', PW-MR, 46, {align:'right'});
+  doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(GREY[0],GREY[1],GREY[2]);
+  doc.text('919 W. 34th Street, #4706, Baltimore, MD 21211', PW-MR, 58, {align:'right'});
+  doc.setDrawColor(OLIVE[0],OLIVE[1],OLIVE[2]); doc.setLineWidth(2); doc.line(ML,86,PW-MR,86);
+  doc.setFont('helvetica','bold'); doc.setFontSize(15); doc.setTextColor(OLIVE_DK[0],OLIVE_DK[1],OLIVE_DK[2]);
+  doc.text('HUD ER INTAKE FORM', PW/2, 108, {align:'center'});
+  doc.setFont('helvetica','normal'); doc.setFontSize(8.5); doc.setTextColor(GREY[0],GREY[1],GREY[2]);
+  doc.text('HUD Part 58 Environmental Review  ·  New Engagement Intake', PW/2, 121, {align:'center'});
+
+  /* info table */
+  var lblS={fontStyle:'bold',fontSize:7,textColor:OLIVE_DK,cellPadding:{top:3,bottom:3,left:8,right:2}};
+  var valS={fontStyle:'bold',fontSize:9,textColor:INK,cellPadding:{top:3,bottom:3,left:2,right:8}};
+  var cityLine=[data.city,data.county?data.county+' County':''].filter(Boolean).join(', ');
+  var stZip=[data.state,data.zip].filter(Boolean).join('  ');
+  doc.autoTable({
+    startY:132, margin:{left:ML,right:MR}, theme:'plain',
+    styles:{fillColor:OLIVE_LT,lineWidth:0,valign:'middle'},
+    columnStyles:{0:{cellWidth:78},1:{cellWidth:186},2:{cellWidth:70},3:{cellWidth:contentW-78-186-70}},
+    body:[
+      [{content:'NAME',styles:lblS},{content:data.contactName||'',styles:valS},{content:'TITLE',styles:lblS},{content:data.contactTitle||'',styles:valS}],
+      [{content:'ORGANIZATION',styles:lblS},{content:data.organization||'',styles:valS},{content:'EMAIL',styles:lblS},{content:data.email||'',styles:valS}],
+      [{content:'PHONE',styles:lblS},{content:data.phone||'',styles:valS},{content:'DATE',styles:lblS},{content:data.date||'',styles:valS}],
+      [{content:'PROJECT',styles:lblS},{content:data.projectName||'',colSpan:3,styles:valS}],
+      [{content:'ADDRESS',styles:lblS},{content:data.street||'',colSpan:3,styles:valS}],
+      [{content:'CITY',styles:lblS},{content:cityLine||'',styles:valS},{content:'STATE / ZIP',styles:lblS},{content:stZip||'',styles:valS}],
+      [{content:'APN',styles:lblS},{content:data.apn||'',styles:valS},{content:'ACREAGE',styles:lblS},{content:data.acreage||'',styles:valS}]
+    ]
+  });
+  var infoTop=132, infoBot=doc.lastAutoTable.finalY;
+  doc.setFillColor(OLIVE[0],OLIVE[1],OLIVE[2]); doc.rect(ML,infoTop,3,infoBot-infoTop,'F');
+  var y=infoBot+12;
+
+  /* ===== HUD FUNDING ===== */
+  y=sectionHead(doc,ML,contentW,y,'HUD FUNDING');
+  var fbody=data.hudSources.map(function(s,i){ return [String(i+1), s.grant||'—', s.program||'—', money(s.amount)]; });
+  if(!fbody.length) fbody=[['—','—','—',money(0)]];
+  doc.autoTable({
+    startY:y, margin:{left:ML,right:MR}, theme:'grid',
+    head:[[{content:'#'},{content:'Grant / FHA #'},{content:'HUD Program'},{content:'Amount'}]],
+    headStyles:{fillColor:OLIVE_DK,textColor:WHITE,fontStyle:'bold',fontSize:8,halign:'left',cellPadding:{top:4,bottom:4,left:6,right:6}},
+    styles:{fontSize:8.5,textColor:INK,lineColor:RULE,lineWidth:0.5,cellPadding:{top:4,bottom:4,left:6,right:6},valign:'top'},
+    columnStyles:{0:{cellWidth:22,halign:'center',fontStyle:'bold',textColor:OLIVE_DK},1:{cellWidth:150},2:{cellWidth:contentW-22-150-110},3:{cellWidth:110,halign:'right'}},
+    alternateRowStyles:{fillColor:[247,248,241]},
+    body:fbody,
+    foot:[[{content:'Total HUD Funded',colSpan:3,styles:{halign:'right',fontStyle:'bold',textColor:OLIVE_DK}},{content:money(data.hudTotal),styles:{halign:'right',fontStyle:'bold',textColor:OLIVE_DK}}]],
+    footStyles:{fillColor:OLIVE_LT,lineColor:RULE,lineWidth:0.5}
+  });
+  y=doc.lastAutoTable.finalY+8;
+  y=labelValueTable(doc,ML,MR,contentW,y,[
+    ['Estimated Total Project Cost', money(data.totalProjectCost)],
+    ['Other Federal Funding', data.otherFederal==='yes'
+        ? (data.fedSources.length? data.fedSources.map(function(s){return [s.agency,s.program,s.grant,s.amount?money(s.amount):''].filter(Boolean).join(' · ');}).join('\n') : 'Yes')
+        : 'No']
+  ])+12;
+
+  /* page-break helper */
+  function ensure(space){ if(y+space>PH-60){ doc.addPage(); y=54; } }
+
+  /* ===== PROJECT SUMMARY ===== */
+  ensure(120);
+  y=sectionHead(doc,ML,contentW,y,'PROJECT SUMMARY');
+  y=labelValueTable(doc,ML,MR,contentW,y,[
+    ['Description of Proposed Project', data.projectDescription],
+    ['Project Documents', data.projectFiles.length? data.projectFiles.join(', ') : '—'],
+    ['Project Activities', data.activities.length? data.activities.join('; ') : '—'],
+    ['Land Use Change', data.landUseChange + (data.landUseChange==='Yes'&&data.landUseDescription? '  —  '+data.landUseDescription : '')],
+    ['Planned Use of Property', data.plannedUse.length? data.plannedUse.join('; ') : '—'],
+    ['Residential Units', data.units || '—'],
+    ['Ground Disturbance', data.groundDisturbance + (data.groundDisturbance==='Yes'&&data.groundDisturbanceDetails? '  —  '+data.groundDisturbanceDetails : '')]
+  ])+12;
+
+  /* ===== PROJECT JUSTIFICATION (EA) ===== */
+  if(data.eaApplicable==='Yes'){
+    ensure(120);
+    y=sectionHead(doc,ML,contentW,y,'PROJECT JUSTIFICATION (EA)');
+    y=labelValueTable(doc,ML,MR,contentW,y,[
+      ['Statement of Purpose and Need', data.purposeNeed],
+      ['Existing Conditions and Trends', data.existingConditions],
+      ['Supporting Documents', data.purposeFiles.length? data.purposeFiles.join(', ') : '—']
+    ])+12;
+  }
+
+  /* footer on every page */
+  var pages=doc.getNumberOfPages();
+  for(var p=1;p<=pages;p++){
+    doc.setPage(p);
+    doc.setDrawColor(RULE[0],RULE[1],RULE[2]); doc.setLineWidth(0.5); doc.line(ML,PH-32,PW-MR,PH-32);
+    doc.setFont('helvetica','normal'); doc.setFontSize(7.5); doc.setTextColor(154,156,136);
+    doc.text('AZ-RI Consultants  ·  HUD ER Intake Form', ML, PH-21);
+    doc.text('Page '+p+' of '+pages+'  ·  '+(data.date||''), PW-MR, PH-21, {align:'right'});
+  }
+  return doc;
+}
+
+/* submit */
+document.getElementById("hudform").addEventListener("submit", async function(e){
+  e.preventDefault();
+  var form=e.target;
+  if(!form.checkValidity()){ form.reportValidity(); return; }
+  if(checkVals("activities").length===0){ alert("Please select at least one Project Activity."); return; }
+  if(checkVals("plannedUse").length===0){ alert("Please select at least one Planned Use of Property."); return; }
+  var btn=document.getElementById("submitBtn"), status=document.getElementById("status");
+  btn.disabled=true; btn.textContent="Generating PDF…"; status.className=""; status.textContent="";
+  try{
+    var data=gatherData();
+    var doc=buildPdf(data);
+    var fname=fileStamp();
+    var blob=doc.output("blob");
+    doc.save(fname);
+
+    var fd=new FormData();
+    fd.append("Form", FORM_TYPE);
+    fd.append("_subject", "HUD ER Intake — "+(data.contactName||"")+" — "+(data.projectName||""));
+    fd.append("Name", data.contactName);
+    fd.append("Title / Position", data.contactTitle);
+    fd.append("Organization", data.organization);
+    fd.append("Email", data.email);
+    fd.append("_replyto", data.email);
+    fd.append("Phone", data.phone);
+    fd.append("Project Name", data.projectName);
+    fd.append("Property Address", [data.street,data.city,data.state,data.zip].filter(Boolean).join(", "));
+    fd.append("County", data.county);
+    fd.append("APN", data.apn);
+    fd.append("Acreage", data.acreage);
+    fd.append("HUD Funding Sources", data.hudSources.map(function(s){return [s.grant,s.program,money(s.amount)].filter(Boolean).join(" / ");}).join(" | ")||"—");
+    fd.append("Total HUD Funded", money(data.hudTotal));
+    fd.append("Total Project Cost", money(data.totalProjectCost));
+    fd.append("Other Federal Funding", data.otherFederal + (data.fedSources.length? " — "+data.fedSources.map(function(s){return [s.agency,s.program,s.grant,s.amount?money(s.amount):''].filter(Boolean).join(" / ");}).join(" | ") : ""));
+    fd.append("Project Description", data.projectDescription);
+    fd.append("Project Activities", data.activities.join("; "));
+    fd.append("Land Use Change", data.landUseChange + (data.landUseDescription? " — "+data.landUseDescription : ""));
+    fd.append("Planned Use", data.plannedUse.join("; "));
+    fd.append("Residential Units", data.units);
+    fd.append("Ground Disturbance", data.groundDisturbance + (data.groundDisturbanceDetails? " — "+data.groundDisturbanceDetails : ""));
+    fd.append("EA Applicable", data.eaApplicable);
+    if(data.eaApplicable==='Yes'){
+      fd.append("Statement of Purpose and Need", data.purposeNeed);
+      fd.append("Existing Conditions and Trends", data.existingConditions);
+    }
+    fd.append("attachment", new File([blob], fname, {type:"application/pdf"}));
+    var pf=document.querySelector('[name="projectDocuments"]');
+    if(pf&&pf.files){ for(var i=0;i<pf.files.length;i++) fd.append("project-doc-"+(i+1), pf.files[i]); }
+    var uf=document.querySelector('[name="purposeDocuments"]');
+    if(uf&&uf.files){ for(var j=0;j<uf.files.length;j++) fd.append("purpose-doc-"+(j+1), uf.files[j]); }
+
+    var res=await fetch(FORMSPREE_ENDPOINT,{method:"POST",body:fd,headers:{Accept:"application/json"}});
+    if(res.ok){
+      status.className="ok";
+      status.textContent="Thank you — your HUD ER intake summary has been downloaded and sent to AZ-RI Consultants.";
+      btn.textContent="Submitted";
+    }else{
+      status.className="err";
+      status.textContent="Your PDF downloaded, but the copy to AZ-RI may not have gone through. Please email your saved PDF to info@az-ri.com.";
+      btn.disabled=false; btn.textContent="Retry submission";
+    }
+  }catch(err){
+    console.error(err);
+    status.className="err";
+    status.textContent="Something went wrong generating the PDF. Please try again or email info@az-ri.com.";
+    btn.disabled=false; btn.textContent="Submit & Generate PDF";
+  }
+  resizeParentIframe();
+});
+
+function resizeParentIframe(){
+  setTimeout(function(){
+    var h=document.documentElement.scrollHeight;
+    window.parent.postMessage({type:'esa-form-resize',height:h}, '*');
+  },100);
+}
+document.addEventListener("DOMContentLoaded", resizeParentIframe);
+window.addEventListener("load", resizeParentIframe);
+</script>
+</body>
+</html>
