@@ -43,6 +43,14 @@
   input:focus,select:focus,textarea:focus{outline:none;border-color:var(--olive);box-shadow:0 0 0 2px rgba(107,117,64,.18);}
   textarea{resize:vertical;min-height:70px;}
   input[type=file]{font-size:13px;}
+  .file-add-btn{display:inline-block;font:inherit;font-size:13px;font-weight:600;color:var(--olive-dark);background:var(--olive-light);border:1px solid var(--olive);border-radius:5px;padding:7px 14px;cursor:pointer;}
+  .file-add-btn:hover{background:#e2e7d2;}
+  .file-list{margin-top:8px;display:flex;flex-direction:column;gap:6px;}
+  .file-item{display:flex;align-items:center;justify-content:space-between;gap:10px;background:#fafbf5;border:1px solid var(--rule);border-radius:5px;padding:6px 10px;font-size:13px;color:var(--ink);}
+  .file-item .fmeta{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .file-item .fsize{color:var(--grey);font-size:12px;}
+  .file-rm{flex:0 0 auto;background:none;border:none;color:#a12b2b;font-size:18px;line-height:1;cursor:pointer;padding:0 6px;}
+  .file-rm:hover{color:#7a1f1f;}
 
   .note-box{background:var(--olive-light);border-left:4px solid var(--olive);border-radius:0 6px 6px 0;padding:11px 14px;font-size:13px;line-height:1.5;color:var(--ink);margin-bottom:16px;}
   .field-desc{font-size:12.5px;color:var(--grey);line-height:1.45;margin:-4px 0 8px;}
@@ -185,8 +193,10 @@
         <div class="fld full"><label class="lab">Description of Proposed Project <span class="req">*</span></label>
           <textarea name="projectDescription" required placeholder="Nature and scope of activities, size and scale, and any activities that may have environmental impacts..."></textarea></div>
         <div class="fld full"><label class="lab">Upload Project Description / Scope of Work (optional)</label>
-          <input type="file" name="projectDocuments" accept=".pdf,.doc,.docx,.dwg" multiple>
-          <div class="note" style="margin-top:5px;">Architectural plans, scope of work, narratives (PDF, DOC, DWG) &mdash; max 10MB per file.</div></div>
+          <input type="file" id="fi_projectDocs" accept=".pdf,.doc,.docx,.dwg" multiple style="display:none" onchange="addFiles('projectDocs', this)">
+          <button type="button" class="file-add-btn" onclick="document.getElementById('fi_projectDocs').click()">+ Add file(s)</button>
+          <div class="file-list" id="fl_projectDocs"></div>
+          <div class="note" style="margin-top:6px;">Add documents one at a time, or select several at once — each stays in the list until you remove it. Architectural plans, scope of work, narratives (PDF, DOC, DWG) &mdash; max 10MB per file.</div></div>
       </div>
 
       <div class="sub-h">Project Activities <span class="req">*</span></div>
@@ -265,8 +275,10 @@
           <div class="fld full"><label class="lab">Existing Conditions and Trends</label>
             <textarea name="existingConditions" placeholder="Physical condition of the property and surrounding area; demographics; market conditions; trends; environmental conditions..."></textarea></div>
           <div class="fld full"><label class="lab">Upload Applicable Documents (optional)</label>
-            <input type="file" name="purposeDocuments" accept=".pdf,.doc,.docx,.jpg,.png" multiple>
-            <div class="note" style="margin-top:5px;">Needs assessments, market studies, planning reports, letters of support &mdash; max 10MB per file.</div></div>
+            <input type="file" id="fi_purposeDocs" accept=".pdf,.doc,.docx,.jpg,.png" multiple style="display:none" onchange="addFiles('purposeDocs', this)">
+            <button type="button" class="file-add-btn" onclick="document.getElementById('fi_purposeDocs').click()">+ Add file(s)</button>
+            <div class="file-list" id="fl_purposeDocs"></div>
+            <div class="note" style="margin-top:6px;">Add documents one at a time, or select several at once — each stays in the list until you remove it. Needs assessments, market studies, planning reports, letters of support &mdash; max 10MB per file.</div></div>
         </div>
       </div>
     </fieldset>
@@ -369,6 +381,29 @@ function val(name){var el=document.querySelector('[name="'+name+'"]');return el?
 function radioVal(name){var el=document.querySelector('[name="'+name+'"]:checked');return el?el.value:"";}
 function checkVals(name){return Array.prototype.map.call(document.querySelectorAll('[name="'+name+'"]:checked'),function(el){return el.value;});}
 function fileNames(name){var el=document.querySelector('[name="'+name+'"]');if(!el||!el.files||!el.files.length)return [];return Array.prototype.map.call(el.files,function(f){return f.name;});}
+/* ---- multi-file uploader: accumulates files across separate selections ---- */
+var fileStore = {};
+function fmtSize(b){ if(b<1024) return b+" B"; if(b<1048576) return Math.round(b/1024)+" KB"; return (b/1048576).toFixed(1)+" MB"; }
+function escHtml(s){ return (s||"").replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];}); }
+function addFiles(key, input){
+  if(!fileStore[key]) fileStore[key]=[];
+  Array.prototype.forEach.call(input.files, function(f){
+    if(!fileStore[key].some(function(x){return x.name===f.name && x.size===f.size;})) fileStore[key].push(f);
+  });
+  input.value="";
+  renderFileList(key);
+  resizeParentIframe();
+}
+function removeFile(key, i){ if(fileStore[key]){ fileStore[key].splice(i,1); renderFileList(key); resizeParentIframe(); } }
+function renderFileList(key){
+  var el=document.getElementById("fl_"+key); if(!el) return;
+  var arr=fileStore[key]||[];
+  el.innerHTML = arr.map(function(f,i){
+    return '<div class="file-item"><span class="fmeta">📎 '+escHtml(f.name)+' <span class="fsize">('+fmtSize(f.size)+')</span></span>'+
+           '<button type="button" class="file-rm" onclick="removeFile(\''+key+'\','+i+')" title="Remove">×</button></div>';
+  }).join("");
+}
+function storeFileNames(key){ return (fileStore[key]||[]).map(function(f){return f.name;}); }
 function todayPretty(){var d=new Date(),m=["January","February","March","April","May","June","July","August","September","October","November","December"];return m[d.getMonth()]+" "+d.getDate()+", "+d.getFullYear();}
 function fileStamp(){var name=(val("contactName")||"Client").replace(/[^A-Za-z0-9]+/g,"_").replace(/^_|_$/g,"");return "AZ-RI_HUD_ER_Intake_"+name+".pdf";}
 
@@ -401,13 +436,13 @@ function gatherData(){
     projectName:val("projectName"),
     hudSources:hud.sources, hudTotal:hud.total, totalProjectCost:val("totalProjectCost"),
     otherFederal:radioVal("otherFederal"), fedSources:gatherFed(),
-    projectDescription:val("projectDescription"), projectFiles:fileNames("projectDocuments"),
+    projectDescription:val("projectDescription"), projectFiles:storeFileNames("projectDocs"),
     activities:checkVals("activities"),
     landUseChange:radioVal("landUseChange"), landUseDescription:val("landUseDescription"),
     plannedUse:checkVals("plannedUse"), units:val("units"),
     groundDisturbance:radioVal("groundDisturbance"), groundDisturbanceDetails:val("groundDisturbanceDetails"),
     eaApplicable:radioVal("eaApplicable"), purposeNeed:val("purposeNeed"),
-    existingConditions:val("existingConditions"), purposeFiles:fileNames("purposeDocuments"),
+    existingConditions:val("existingConditions"), purposeFiles:storeFileNames("purposeDocs"),
     date:todayPretty()
   };
 }
@@ -579,10 +614,8 @@ document.getElementById("hudform").addEventListener("submit", async function(e){
       fd.append("Existing Conditions and Trends", data.existingConditions);
     }
     fd.append("attachment", new File([blob], fname, {type:"application/pdf"}));
-    var pf=document.querySelector('[name="projectDocuments"]');
-    if(pf&&pf.files){ for(var i=0;i<pf.files.length;i++) fd.append("project-doc-"+(i+1), pf.files[i]); }
-    var uf=document.querySelector('[name="purposeDocuments"]');
-    if(uf&&uf.files){ for(var j=0;j<uf.files.length;j++) fd.append("purpose-doc-"+(j+1), uf.files[j]); }
+    (fileStore["projectDocs"]||[]).forEach(function(f,i){ fd.append("project-doc-"+(i+1), f); });
+    (fileStore["purposeDocs"]||[]).forEach(function(f,i){ fd.append("purpose-doc-"+(i+1), f); });
 
     var res=await fetch(FORMSPREE_ENDPOINT,{method:"POST",body:fd,headers:{Accept:"application/json"}});
     if(res.ok){
